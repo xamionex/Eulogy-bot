@@ -133,6 +133,12 @@ async def jokerep(ctx, *, jrep):
     jokefile.close
     print("Incoming joke from: " + ctx.guild.name + " Joke sent: " + jrep)
 
+@bot.event
+async def on_message(message):
+    if "eulogy" in message.content.lower():
+            emoji = "<:eulogy_zero:967096744800296970>"
+            await message.add_reaction(emoji)
+
 @bot.command()
 async def membercount(ctx):
     await ctx.message.channel.send("There are " + str(ctx.guild.member_count) + " members in this server.")
