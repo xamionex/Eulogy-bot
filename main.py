@@ -6,7 +6,8 @@ import json
 
 # set up discord related stuff
 prefixvar = "$"
-activity = discord.Game(name="with your mother | $help")
+statusinput = input("status:")
+activity = discord.Game(name=statusinput)
 client = discord.Client()
 bot = commands.Bot(
     command_prefix=prefixvar,
