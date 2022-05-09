@@ -14,3 +14,4 @@ v2.1.0
   Also has a 30 second cooldown.
 - $nexteulogy shows the next eulogy nickname to be used.
 - $hug and $hugcount allow you to hug people or Newt.
+- Added $currencyinfo.

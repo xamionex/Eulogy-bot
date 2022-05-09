@@ -237,6 +237,17 @@ async def poll(ctx):
     await poll.add_reaction("<:eulogy_no:967622221537345616>")
 
 @bot.command()
+async def currencyinfo(ctx):
+    info = """Everytime you send a message, there's a 15% chance for a lunar coin to drop.
+    If a lunar coin drops, the bot will react with the lunar coin emote to your message.
+    You can see how many lunar coins you have by using $lunarcoins. You can buy lunar pods with your coins using $lunarpod [tier].
+    Every lunar pod scales differently in price with how many coins you have and has different amounts of eulogy it can drop.
+    You can check in-depth stats for lunar pods with $bazaar. After acquiring some eulogies,
+    you can use $eulogies to check how many eulogies you have and $leaderboard to see the five people with the most eulogies."""
+
+    await ctx.message.reply(info)
+
+@bot.command()
 async def help(ctx): # creates an embed with help for each command
     embed = discord.Embed(
         title="Command Help",
@@ -336,6 +347,12 @@ async def help(ctx): # creates an embed with help for each command
     embed.add_field(
         name=f"{prefixvar}hugcount",
         value="Shows how many times newt has been hugged.",
+        inline=False
+    )
+
+    embed.add_field(
+        name=f"{prefixvar}currencyinfo",
+        value="Shows an in-depth explanation of the currency system.",
         inline=False
     )
 
