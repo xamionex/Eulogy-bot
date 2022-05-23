@@ -1,13 +1,18 @@
 import math
 import re
+import token
 import discord
 from discord.ext import commands
 import datetime
+from tokens import MRVN_token, Newt_token
 import random
 import json
 import io
 import threading
 import time
+
+#run or test
+RoT = int(input("choose which bot to run:\n1: run Newt \n2: run MRVN\n1/2: "))
 
 # set up intents
 intents = discord.Intents.default()
@@ -15,7 +20,12 @@ intents.members = True
 intents.messages = True
 
 # set up discord related stuff
-prefixvar = "$"
+if RoT == 1:
+    prefixvar = "$"
+    token = Newt_token
+elif RoT == 2:
+    prefixvar = "£"
+    token = MRVN_token
 statusinput = input("status:")
 activity = discord.Game(name=statusinput)
 client = discord.Client()
@@ -55,7 +65,8 @@ convo_replies = [
     "I don't know.",
     "For sure.",
     "I agree.",
-    "Most definitely yes."
+    "Most definitely yes.",
+    "Fuck you."
 ]
 
 # set up other things
@@ -64,7 +75,7 @@ counter = 0
 first_eulogycount = True
 
 # load in save
-with io.open('saves/save.json', mode='r', encoding='utf-8') as file:
+with io.open('save.json', mode='r', encoding='utf-8') as file:
     data = file.read()
     data.replace('\n', '')
     data.replace('\t', '')
@@ -72,7 +83,7 @@ with io.open('saves/save.json', mode='r', encoding='utf-8') as file:
 save = json.loads(data)
 
 # load in hugs
-with io.open("saves/hugs.txt", mode='r', encoding='utf-8') as file:
+with io.open("hugs.txt", mode='r', encoding='utf-8') as file:
     hugs = int(file.read())
 
 # commands
@@ -156,9 +167,19 @@ async def diceroll(ctx): # roll a dice
     else:
         await ctx.message.reply("The dice is still on cooldown for another " + str(int(10 + (last_dice_usage - time.time()))) + " seconds.")
 
-@bot.command()
+@bot.command(pass_context=True)
+@commands.has_role(("Newt Engineer") or ("Eulogologist"))
 async def echo(ctx, *, message):
     await ctx.send(message)
+    await ctx.message.delete()
+
+@bot.command()
+@commands.has_any_role('Newt Engineer', 'Eulogologist')
+async def reply(ctx, *, message):
+    reference = ctx.message.reference
+    if reference is None:
+        return await ctx.reply(f"{ctx.author.mention} You didn't reply to any message.")
+    await reference.resolved.reply(message)
     await ctx.message.delete()
 
 @bot.command()
@@ -187,6 +208,22 @@ async def fban(ctx, member: discord.Member, *, reason=None):
 
     await ctx.message.channel.send(embed=embed)
     await ctx.message.delete()
+
+#role management
+
+@bot.command(pass_context=True)
+@commands.has_role("Newt Engineer")
+async def addrole(ctx, user: discord.Member, role: discord.Role):
+    await user.add_roles(role)
+    await ctx.send(f"hey {ctx.author.name}, {user.name} has been given a role called: {role.name}")
+
+@bot.command(pass_context=True)
+@commands.has_role("Newt Engineer")
+async def takerole(ctx, user: discord.Member, role: discord.Role):
+    await user.remove_roles(role)
+    await ctx.send(f"hey {ctx.author.name}, {user.name} has lost a role called: {role.name}")
+
+#currency + fun
 
 @bot.command()
 async def changelog(ctx):
@@ -566,6 +603,12 @@ async def on_ready():
     print("Connected.")
     print("Awaiting commands.")
 
+#automated responses setups
+meowpasta = ["nya", "meow"]
+blacklist = ["fuck", ]
+mult = ["mul-t", "mult", "multi"]
+rex_replies = ["Knock knock \n who's there? \n A concussion from a high amplitude sonic boom", "What's pink and green and is about to show you the definition of pain?"]
+
 @bot.event
 async def on_message(message):
     global counter
@@ -576,11 +619,79 @@ async def on_message(message):
         counter += 1
     if "cleansing pool" in message.content.lower():
         await message.reply("Watch your language.")
+
+
     if message.author.bot == False and not "$hug" in message.content.lower():
-        if "meow" in message.content.lower():
-            await message.reply("Wowwwww, you meow like a cat! That means you are one, right? Shut the fuck up. If you want to be put on a leash and treated like a domestic animal, that's called a fetish, not “quirky” or “cute.” What part of you seriously thinks that any portion of acting like a feline establishes a reputation of appreciation? Is it your lack of any defining aspect of personality that urges you to resort to shitty representations of cats to create an illusion of meaning in your worthless life? Wearing “cat ears” in the shape of headbands further notes the complete absence of human attribution to your false sense of personality, such as intelligence or charisma in any form or shape. Where do you think this mindset's going to lead you? Do you think you're funny, random, quirky even? What makes you think that acting like a fucking cat will make a goddamn hyena laugh? I, personally, feel highly sympathetic towards you as your only escape from the worthless thing you call your existence is to pretend to be an animal. But it's not a worthy choice to assert this horrifying fact as a dominant trait, mainly because personality traits require an initial personality to lay their foundation on. You're not worthy of anybody's time, so go fuck off, \"cat-girl.\"")    
+        for word in meowpasta:
+            if word in message.content.lower():
+                await message.reply("Wowwwww, you meow like a cat! That means you are one, right? Shut the fuck up. If you want to be put on a leash and treated like a domestic animal, that's called a fetish, not “quirky” or “cute.” What part of you seriously thinks that any portion of acting like a feline establishes a reputation of appreciation? Is it your lack of any defining aspect of personality that urges you to resort to shitty representations of cats to create an illusion of meaning in your worthless life? Wearing “cat ears” in the shape of headbands further notes the complete absence of human attribution to your false sense of personality, such as intelligence or charisma in any form or shape. Where do you think this mindset's going to lead you? Do you think you're funny, random, quirky even? What makes you think that acting like a fucking cat will make a goddamn hyena laugh? I, personally, feel highly sympathetic towards you as your only escape from the worthless thing you call your existence is to pretend to be an animal. But it's not a worthy choice to assert this horrifying fact as a dominant trait, mainly because personality traits require an initial personality to lay their foundation on. You're not worthy of anybody's time, so go fuck off, \"cat-girl.\"")    
         if bot.user.mentioned_in(message): # "ask newt" functionality
             await message.reply(random.choice(convo_replies))
+
+
+        #survivor responses
+        if "mando" in message.content.lower():
+            await message.reply("Ew.")
+        elif "huntress" in message.content.lower():
+            await message.reply("Her burden :flushed:")
+        elif "bandit" in message.content.lower():
+            await message.reply("Bandit makes some mighty fine beans.")
+        elif "engi" in message.content.lower():
+            await message.reply("<:BUNGUS:977317901277212722> :heart: ***B U N G U S*** :heart: <:BUNGUS:977317901277212722>")
+        elif "arti" in message.content.lower():
+            await message.reply("Ion surge OP, pls nerf")
+        elif "merc" in message.content.lower():
+            await message.reply("I simply never get hit as i utilise my I-frames perfectly leaving no opening to be hit by enemy attacks, and if you dislike merc you simply have a massive skill issue and wasted your time trying to get bitches instead of studying the blade")
+        elif "rex" in message.content.lower():
+            await message.reply(rex_replies(random.randint(0, 2)))
+        elif "load" in message.content.lower():
+            await message.reply("Beat mitrhix into a bloody pulp any% speedrun")
+        elif "acrid" in message.content.lower():
+            await message.reply(":heart Acid doggy :heart:")
+        elif "cap" in message.content.lower():
+            await message.reply("Thermonuclear warfare :thumbsup:")
+        elif "gunner" in message.content.lower():
+            await message.reply("Epic railer MLG quickscope compilation #69")
+        elif "fiend" in message.content.lower() or "viend" in message.content.lower():
+            await message.reply("I LOVE LEAN")
+        elif "goat" in message.content.lower() or "hoof" in message.content.lower() or "drink" in message.content.lower():
+            await message.reply("""
+Go, go, go, go, go, go, go
+
+Gotta go fast, gotta go fast
+Gotta go faster, faster, faster, faster, faster!
+
+Movin' at speed of sound (make tracks!)
+Quickest hedgehog around
+Got ourselves a situation
+Stuck in a new location
+Without any explanation
+No time for relaxation!
+
+Don't, don't, don't, don't, don't blink, don't think
+Just go, go, go, go, g-g-g-g-go, go!
+
+N-n-n-n-n-n-na
+N-n-n-n-n-n-na
+
+Sonic, he's on the run!
+Sonic, he's number one!
+Sonic, he's comin' next!
+So watch out... For Sonic X!
+
+Gotta go fast (Sonic!)
+Gotta go fast (Sonic!)
+Gotta go faster, faster, faster, faster, faster!
+Go, go, go, go, go, go, go
+Sonic X!
+
+Gotta go fast, gotta go fast
+Gotta go faster, faster, faster, faster, faster!
+Sonic X!""")
+
+        for word in mult:
+            if word in message.content.lower():
+                await message.reply("Haha MUL-T double nail go ***brrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr***")
 
     # handle lunar coins dropping
     if random.randint(1, 20) <= 3 and message.author.bot == False:
@@ -604,11 +715,11 @@ def autosave():
         
         print("Saving to disk...", end=' ')
 
-        with io.open("saves/save.json", mode="w", encoding="utf-8") as savefile:
+        with io.open("save.json", mode="w", encoding="utf-8") as savefile:
             savefile.write(json.dumps(save, sort_keys=True, indent=4))
             savefile.flush()
 
-        with io.open("saves/hugs.txt", mode="w", encoding="utf-8") as file:
+        with io.open("hugs.txt", mode="w", encoding="utf-8") as file:
             file.write(str(hugs))
             file.flush()
         
@@ -620,16 +731,17 @@ def force_save():
         
         print("Saving to disk...", end=' ')
 
-        with io.open("saves/save.json", mode="w", encoding="utf-8") as savefile:
+        with io.open("save.json", mode="w", encoding="utf-8") as savefile:
             savefile.write(json.dumps(save, sort_keys=True, indent=4))
             savefile.flush()
         
-        with io.open("saves/hugs.txt", mode="w", encoding="utf-8") as file:
+        with io.open("hugs.txt", mode="w", encoding="utf-8") as file:
             file.write(str(hugs))
             file.flush()
         
         print("Done!")
-        
+
+
 autosave_thread = threading.Thread(target=autosave, daemon=True)
 forcesave_thread = threading.Thread(target=force_save, daemon=True)
 
@@ -638,7 +750,5 @@ forcesave_thread.start()
 
 print("Notice! Closing this window will turn off the bot.")
 
-with io.open("newt token.txt") as file:
-    token = file.read()
 
 bot.run(token)
