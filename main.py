@@ -1,9 +1,14 @@
-import discord
-from discord.ext import bridge
 import json
-from cogs import utils
+import discord
+from discord.ext import commands, bridge
+# cogs
+import secrets
+from cogs import block, utils
 
-# set prefix commands
+intents = discord.Intents.default()
+intents.members = True
+intents.message_content = True
+intents.guilds = True
 
 
 def get_prefix(bot, msg):
@@ -19,28 +24,36 @@ def get_prefix(bot, msg):
 def when_mentioned_or_function(func):
     def inner(bot, msg):
         r = list(func(bot, msg))
-        # uncomment below to enable mention for prefix
-        #r = commands.when_mentioned(bot, msg) + r
+        r = commands.when_mentioned(bot, msg) + r
         return r
     return inner
 
 
-# set up intents
-intents = discord.Intents.default()
-intents.members = True
-intents.messages = True
-intents.message_content = True
-
-# set up discord related stuff
-#statusinput = input("status:")
-#activity = discord.Game(name=statusinput)
 bot = bridge.Bot(
     command_prefix=when_mentioned_or_function(get_prefix),
     description="This is a Bot made by Wiki and Crow.",
-    # activity=activity,
-    status=discord.Status.online,
-    intents=intents
+    intents=intents,
+    allowed_mentions=discord.AllowedMentions(
+        everyone=False,      # Whether to ping @everyone or @here mentions
+        roles=False,         # Whether to ping role @mentions
+        # activity=discord.Game(name=input("Playing Status:")),
+    ),
 )
+
+
+@bot.before_invoke
+async def on_command(ctx):
+    try:
+        if ctx.author.guild_permissions.administrator:
+            ctx.command.reset_cooldown(ctx)
+    except:
+        pass
+    try:
+        if await block.BlockUtils.get_perm(ctx, ctx, "blacklist", ctx.author) and ctx.author.guild_permissions.administrator == False:
+            raise commands.CommandError(
+                f"{ctx.author.mention}, You were **blocked** from using this bot, direct message <@139095725110722560> if you feel this is unfair")
+    except AttributeError:
+        pass
 
 
 @bot.event
@@ -58,4 +71,4 @@ print("Found", end=" ")
 print(*extensions[0], sep=', ')
 print("Ignored", end=" ")
 print(*extensions[1], sep=', ')
-bot.run("NzU2MDg4MDk1NDc2MTU0NDAw.X2Mv6Q.q_UWcwrUhUejpp-k7M6T2yGQ1DM")
+bot.run(secrets.secret)
