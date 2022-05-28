@@ -14,7 +14,6 @@ class InfoCommands(commands.Cog, name="Informational"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.first_eulogycount = bot.first_eulogycount
 
     @bridge.bridge_command(name="userinfo")
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -62,7 +61,7 @@ class InfoCommands(commands.Cog, name="Informational"):
     @commands.command()
     # count the total amount of times eulogy has been said
     async def eulogycount(self, bot):
-        first_eulogycount = self.first_eulogycount
+        first_eulogycount = self.bot.first_eulogycount
 
         if first_eulogycount:
             first_eulogycount = False
