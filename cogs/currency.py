@@ -1,4 +1,5 @@
 from discord.ext import commands
+from cogs import configs
 import math
 import random
 import discord
@@ -14,9 +15,6 @@ class CurrencyCommands(commands.Cog, name="Currency Commands"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.save = bot.save
-        self.eulogy_emoji = bot.eulogy_emoji
-        self.lunar_symbol = bot.lunar_symbol
 
     @commands.command()
     async def currencyinfo(self, bot):
@@ -32,26 +30,24 @@ class CurrencyCommands(commands.Cog, name="Currency Commands"):
     @commands.command()
     async def lunarcoins(self, bot):
         try:
-            await bot.message.reply("You have " + str(self.save[bot.message.author.id]["coins"]) + " " + self.lunar_symbol + "!")
+            await bot.message.reply("You have " + str(self.bot.save[bot.message.author.id]["coins"]) + " " + self.bot.lunar_symbol + "!")
         except:
-            self.save[bot.message.author.id] = {
-                "coins": 0,
-                "eulogies": 0
-            }
-
-            await bot.message.reply("You have " + str(self.save[bot.message.author.id]["coins"]) + " " + self.lunar_symbol + "!")
+            self.bot.save[bot.message.author.id] = {}
+            self.bot.save[bot.message.author.id]["coins"] = 0
+            self.bot.save[bot.message.author.id]["eulogies"] = 0
+            await bot.message.reply("You have " + str(self.bot.save[bot.message.author.id]["coins"]) + " " + self.bot.lunar_symbol + "!")
+        configs.save(self.bot.save_path, "w", self.bot.save)
 
     @commands.command()
     async def eulogies(self, bot):
         try:
-            await bot.message.reply("You have " + str(self.save[bot.message.author.id]["eulogies"]) + " " + self.eulogy_emoji + "!")
+            await bot.message.reply("You have " + str(self.bot.save[bot.message.author.id]["eulogies"]) + " " + self.bot.eulogy_emoji + "!")
         except:
-            self.save[bot.message.author.id] = {
-                "coins": 0,
-                "eulogies": 0
-            }
-
-            await bot.message.reply("You have " + str(self.save[bot.message.author.id]["eulogies"]) + " " + self.eulogy_emoji + "!")
+            self.bot.save[bot.message.author.id] = {}
+            self.bot.save[bot.message.author.id]["coins"] = 0
+            self.bot.save[bot.message.author.id]["eulogies"] = 0
+            await bot.message.reply("You have " + str(self.bot.save[bot.message.author.id]["eulogies"]) + " " + self.bot.eulogy_emoji + "!")
+        configs.save(self.bot.save_path, "w", self.bot.save)
 
     @commands.command()
     async def lunarpod(self, bot, type=None):
@@ -59,67 +55,67 @@ class CurrencyCommands(commands.Cog, name="Currency Commands"):
             await bot.message.reply("Use `$lunarpod [type]` to open a lunar pod. Use `$bazaar` to see types of lunar pods.")
             return
 
-        if self.save[bot.message.author.id]["coins"] <= 0:
+        if self.bot.save[bot.message.author.id]["coins"] <= 0:
             await bot.message.reply("You do not have sufficient lunar coins. Use `$bazaar` to see prices.")
             return
 
         eulogies_dropped = 0
 
         if type == "1":
-            if self.save[bot.message.author.id]["coins"] < 3:
+            if self.bot.save[bot.message.author.id]["coins"] < 3:
                 await bot.message.reply("You do not have sufficient lunar coins. Use `$bazaar` to see prices.")
                 return
 
-            self.save[bot.message.author.id]["coins"] -= 3
+            self.bot.save[bot.message.author.id]["coins"] -= 3
 
             if random.randint(1, 20) == 20:
                 eulogies_dropped += 1
         elif type == "2":
-            if self.save[bot.message.author.id]["coins"] < math.ceil((6 + ((self.save[bot.message.author.id]["coins"] / 100) * 8))):
+            if self.bot.save[bot.message.author.id]["coins"] < math.ceil((6 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 8))):
                 await bot.message.reply("You do not have sufficient lunar coins. Use `$bazaar` to see prices.")
                 return
 
-            self.save[bot.message.author.id]["coins"] -= math.ceil(
-                (6 + ((self.save[bot.message.author.id]["coins"] / 100) * 8)))
+            self.bot.save[bot.message.author.id]["coins"] -= math.ceil(
+                (6 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 8)))
 
             if random.randint(1, 100) <= 15:
                 eulogies_dropped += 1
         elif type == "3":
-            if self.save[bot.message.author.id]["coins"] < math.ceil((9 + ((self.save[bot.message.author.id]["coins"] / 100) * 16))):
+            if self.bot.save[bot.message.author.id]["coins"] < math.ceil((9 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 16))):
                 await bot.message.reply("You do not have sufficient lunar coins. Use `$bazaar` to see prices.")
                 return
 
-            self.save[bot.message.author.id]["coins"] -= math.ceil(
-                (9 + ((self.save[bot.message.author.id]["coins"] / 100) * 16)))
+            self.bot.save[bot.message.author.id]["coins"] -= math.ceil(
+                (9 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 16)))
 
             if random.randint(1, 20) <= 30:
                 eulogies_dropped += 1
         elif type == "4":
-            if self.save[bot.message.author.id]["coins"] < math.ceil((12 + ((self.save[bot.message.author.id]["coins"] / 100) * 24))):
+            if self.bot.save[bot.message.author.id]["coins"] < math.ceil((12 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 24))):
                 await bot.message.reply("You do not have sufficient lunar coins. Use `$bazaar` to see prices.")
                 return
 
-            self.save[bot.message.author.id]["coins"] -= math.ceil(
-                (12 + ((self.save[bot.message.author.id]["coins"] / 100) * 24)))
+            self.bot.save[bot.message.author.id]["coins"] -= math.ceil(
+                (12 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 24)))
 
             if random.randint(1, 20) <= 60:
                 eulogies_dropped += 1
         elif type == "5":
-            if self.save[bot.message.author.id]["coins"] < math.ceil((15 + ((self.save[bot.message.author.id]["coins"] / 100) * 32))):
+            if self.bot.save[bot.message.author.id]["coins"] < math.ceil((15 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 32))):
                 await bot.message.reply("You do not have sufficient lunar coins. Use `$bazaar` to see prices.")
                 return
 
-            self.save[bot.message.author.id]["coins"] -= math.ceil(
-                (15 + ((self.save[bot.message.author.id]["coins"] / 100) * 32)))
+            self.bot.save[bot.message.author.id]["coins"] -= math.ceil(
+                (15 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 32)))
 
             eulogies_dropped += 1 + random.randint(0, 5)
         elif type == "6":
-            if self.save[bot.message.author.id]["coins"] < math.ceil((18 + ((self.save[bot.message.author.id]["coins"] / 100) * 40))):
+            if self.bot.save[bot.message.author.id]["coins"] < math.ceil((18 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 40))):
                 await bot.message.reply("You do not have sufficient lunar coins. Use `$bazaar` to see prices.")
                 return
 
-            self.save[bot.message.author.id]["coins"] -= math.ceil(
-                (18 + ((self.save[bot.message.author.id]["coins"] / 100) * 40)))
+            self.bot.save[bot.message.author.id]["coins"] -= math.ceil(
+                (18 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 40)))
 
             eulogies_dropped += 1 + random.randint(0, 10)
 
@@ -130,11 +126,11 @@ class CurrencyCommands(commands.Cog, name="Currency Commands"):
         for i in range(0, (6 - int(type))):
             reply += u"\u2606"
 
-        reply += "):\n" + self.eulogy_emoji + " " + str(eulogies_dropped)
+        reply += "):\n" + self.bot.eulogy_emoji + " " + str(eulogies_dropped)
 
-        self.save[bot.message.author.id]["eulogies"] += eulogies_dropped
-
+        self.bot.save[bot.message.author.id]["eulogies"] += eulogies_dropped
         await bot.message.reply(reply)
+        configs.save(self.bot.save_path, "w", self.bot.save)
 
     @commands.command()
     async def bazaar(self, bot):
@@ -148,45 +144,46 @@ class CurrencyCommands(commands.Cog, name="Currency Commands"):
         embed.add_field(
             name=u"Lunar Pod (\u2605\u2606\u2606\u2606\u2606\u2606)",
             value="5% chance for one eulogy.\nPrice: 3 " +
-            self.lunar_symbol + ".\nUse `$lunarpod 1` to open."
+            self.bot.lunar_symbol + ".\nUse `$lunarpod 1` to open."
         )
 
         embed.add_field(
             name=u"Lunar Pod (\u2605\u2605\u2606\u2606\u2606\u2606)",
             value="15% chance for one eulogy.\nPrice: " +
-            str(math.ceil((6 + ((self.save[bot.message.author.id]["coins"] / 100) * 8)))
-                ) + " " + self.lunar_symbol + ".\nUse `$lunarpod 2` to open."
+            str(math.ceil((6 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 8)))
+                ) + " " + self.bot.lunar_symbol + ".\nUse `$lunarpod 2` to open."
         )
 
         embed.add_field(
             name=u"Lunar Pod (\u2605\u2605\u2605\u2606\u2606\u2606)",
             value="30% chance for one eulogy.\nPrice: " +
-            str(math.ceil((9 + ((self.save[bot.message.author.id]["coins"] / 100) * 16)))
-                ) + " " + self.lunar_symbol + ".\nUse `$lunarpod 3` to open."
+            str(math.ceil((9 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 16)))
+                ) + " " + self.bot.lunar_symbol + ".\nUse `$lunarpod 3` to open."
         )
 
         embed.add_field(
             name=u"Lunar Pod (\u2605\u2605\u2605\u2605\u2606\u2606)",
             value="60% chance for one eulogy.\nPrice: " +
-            str(math.ceil((12 + ((self.save[bot.message.author.id]["coins"] / 100) * 24)))
-                ) + " " + self.lunar_symbol + ".\nUse `$lunarpod 4` to open."
+            str(math.ceil((12 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 24)))
+                ) + " " + self.bot.lunar_symbol + ".\nUse `$lunarpod 4` to open."
         )
 
         embed.add_field(
             name=u"Lunar Pod (\u2605\u2605\u2605\u2605\u2605\u2606)",
             value="Contains a guaranteed eulogy and up to 5 bonus eulogies.\nPrice: " +
-            str(math.ceil((15 + ((self.save[bot.message.author.id]["coins"] / 100) * 32)))
-                ) + " " + self.lunar_symbol + ".\nUse `$lunarpod 5` to open."
+            str(math.ceil((15 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 32)))
+                ) + " " + self.bot.lunar_symbol + ".\nUse `$lunarpod 5` to open."
         )
 
         embed.add_field(
             name=u"Lunar Pod (\u2605\u2605\u2605\u2605\u2605\u2605)",
             value="Contains a guaranteed eulogy and up to 10 bonus eulogies.\nPrice: " +
-            str(math.ceil((18 + ((self.save[bot.message.author.id]["coins"] / 100) * 40)))
-                ) + " " + self.lunar_symbol + ".\nUse `$lunarpod 6` to open."
+            str(math.ceil((18 + ((self.bot.save[bot.message.author.id]["coins"] / 100) * 40)))
+                ) + " " + self.bot.lunar_symbol + ".\nUse `$lunarpod 6` to open."
         )
 
         await bot.send(embed=embed)
+        configs.save(self.bot.save_path, "w", self.bot.save)
 
     @commands.command()
     async def leaderboard(self, bot):
@@ -200,9 +197,9 @@ class CurrencyCommands(commands.Cog, name="Currency Commands"):
         ids = []
         eulogycounts = []
 
-        for key in self.save:
-            ids.append(self.save[key]["id"])
-            eulogycounts.append(self.save[key]["eulogies"])
+        for key in self.bot.save:
+            ids.append(self.bot.save[key]["id"])
+            eulogycounts.append(self.bot.save[key]["eulogies"])
 
         for i in range(5):
             eulogy_count = max(eulogycounts)
@@ -218,25 +215,24 @@ class CurrencyCommands(commands.Cog, name="Currency Commands"):
 
             embed.add_field(
                 name=str(i + 1) + ". " + user.name,
-                value=self.eulogy_emoji + str(leaderboard[i][1]),
+                value=self.bot.eulogy_emoji + str(leaderboard[i][1]),
                 inline=False
             )
 
         await bot.send(embed=embed)
+        configs.save(self.bot.save_path, "w", self.bot.save)
 
     @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def diceroll(self, bot):  # roll a dice
         if random.randint(1, 6) == 6:
             await bot.message.reply("You rolled a 6, so here's a lunar coin!")
-
             try:
-                self.save[bot.message.author.id]["coins"] += 1
+                self.bot.save[bot.message.author.id]["coins"] += 1
             except:
-                self.save[bot.message.author.id] = {
-                    "coins": 1,
-                    "eulogies": 0,
-                    "id": bot.message.author.id
-                }
+                self.bot.save[bot.message.author.id] = {}
+                self.bot.save[bot.message.author.id]["coins"] = 1
+                self.bot.save[bot.message.author.id]["eulogies"] = 0
         else:
             await bot.message.reply("You sadly didn't get a 6.")
+        configs.save(self.bot.save_path, "w", self.bot.save)

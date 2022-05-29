@@ -1,11 +1,12 @@
-import main
-import discord
-from discord.ext import commands
-from cogs import utils
 import datetime
 import json
+import discord
 import os
 import sys
+from discord.ext import commands
+from cogs import utils, configs
+
+extensions = utils.extensions()
 
 
 def setup(bot):
@@ -18,88 +19,98 @@ class ManageCommands(commands.Cog, name="Management"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.save = bot.save
-        self.hugs = bot.hugs
-        self.extensions = utils.extensions()
+
+    @commands.command(hidden=True, name="log")
+    @commands.is_owner()
+    async def log(self, ctx):
+        args = ctx.message.content.split(" ")
+        if args[1] == "ctx":
+            find = getattr(ctx, args[2])
+        elif args[1] == "self.ctx":
+            find = getattr(self.ctx, args[2])
+        else:
+            find = getattr(getattr(self, args[1]), args[2])
+        print(find)
+        await utils.sendembed(ctx, discord.Embed(description=find), show_all=False, delete=3, delete_speed=5)
 
     @commands.command(hidden=True, name="load")
     @commands.is_owner()
-    async def load(self, bot, *, module: str):
+    async def load(self, ctx, *, module: str):
         """Loads a module"""
         e = discord.Embed(
             description=f"Trying to load modules \"{module}\"", color=0x69FF69)
         module = module.split(sep=" ")
         for cog in module:
-            if cog in self.extensions[0]:
-                self.bot.load_extension(f"cogs.{cog}")
+            if cog in extensions[0]:
+                self.ctx.load_extension(f"cogs.{cog}")
                 e.add_field(name=f"{cog}", value="`✅` Success")
             else:
                 e.add_field(name=f"{cog}", value="`❌` Not found")
-        await utils.sendembed(bot, e, show_all=False, delete=3, delete_speed=5)
+        await utils.sendembed(ctx, e, show_all=False, delete=3, delete_speed=5)
 
     @commands.command(hidden=True, name="unload")
     @commands.is_owner()
-    async def unload(self, bot, *, module: str):
+    async def unload(self, ctx, *, module: str):
         """Unloads a module"""
         e = discord.Embed(
             description=f"Trying to unload modules \"{module}\"", color=0x69FF69)
         module = module.split(sep=" ")
         for cog in module:
-            if cog in self.extensions[0]:
-                self.bot.unload_extension(f"cogs.{cog}")
+            if cog in extensions[0]:
+                self.ctx.unload_extension(f"cogs.{cog}")
                 e.add_field(name=f"{cog}", value="`✅` Success")
             else:
                 e.add_field(name=f"{cog}", value="`❌` Not found")
-        await utils.sendembed(bot, e, show_all=False, delete=3, delete_speed=5)
+        await utils.sendembed(ctx, e, show_all=False, delete=3, delete_speed=5)
 
     @commands.command(hidden=True, name="reload")
     @commands.is_owner()
-    async def reload(self, bot, *, module: str):
+    async def reload(self, ctx, *, module: str):
         """Reloads a module"""
         e = discord.Embed(
             description=f"Trying to reload modules \"{module}\"", color=0x69FF69)
         module = module.split(sep=" ")
         for cog in module:
-            if cog in self.extensions[0]:
-                self.bot.reload_extension(f"cogs.{cog}")
+            if cog in extensions[0]:
+                self.ctx.reload_extension(f"cogs.{cog}")
                 e.add_field(name=f"{cog}", value="`✅` Success")
             elif cog == "all":
-                for cog in self.extensions[0]:
-                    self.bot.reload_extension(f"cogs.{cog}")
+                for cog in extensions[0]:
+                    self.ctx.reload_extension(f"cogs.{cog}")
                     e.add_field(name=f"{cog}", value="`✅` Success")
             else:
                 e.add_field(name=f"{cog}", value="`❌` Not found")
-        await utils.sendembed(bot, e, show_all=False, delete=3, delete_speed=5)
+        await utils.sendembed(ctx, e, show_all=False, delete=3, delete_speed=5)
 
     @commands.command(hidden=True, name="restart")
     @commands.is_owner()
-    async def restart(self, bot):
+    async def restart(self, ctx):
         """Restarts the bot"""
-        await utils.delete_message(bot)
+        await utils.delete_message(ctx)
         os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.command(hidden=True, name="modules")
     @commands.is_owner()
-    async def modules(self, bot):
+    async def modules(self, ctx):
         """Lists modules"""
-        modules = ", ".join(self.extensions[0])
+        modules = ", ".join(extensions[0])
         e = discord.Embed(title=f'Modules found:',
                           description=modules, color=0x69FF69)
-        await utils.sendembed(bot, e, show_all=False, delete=3, delete_speed=5)
+        await utils.sendembed(ctx, e, show_all=False, delete=3, delete_speed=5)
 
     @commands.command(hidden=True, name="prefix")
-    @commands.is_owner()
-    async def prefix(self, bot, prefix=None):
+    @commands.has_permissions(administrator=True)
+    async def prefix(self, ctx, prefix=None):
         """Shows or changes prefix"""
         if prefix is not None:
             with open('./data/prefixes.json', 'r') as f:
                 prefixes = json.load(f)
-            prefixes[str(self, bot.guild.id)] = prefix
+            prefixes[str(ctx.guild.id)] = prefix
             with open('./data/prefixes.json', 'w') as f:
                 json.dump(prefixes, f, indent=4)
-            await utils.sendembed(bot, discord.Embed(description=f'Prefix changed to: {prefix}'), False, 3, 5)
+            await utils.sendembed(ctx, discord.Embed(description=f'Prefix changed to: {prefix}'), False, 3, 5)
         else:
-            await utils.sendembed(bot, discord.Embed(description=f'My prefix is `{main.get_prefix(self, bot.message)}`, you can also use slash commands\nFor more info use the {main.get_prefix(self, bot.message)}help command!'), False, 3, 20)
+            await utils.sendembed(ctx, discord.Embed(description=f'My prefix is `{self.ctx.guild_prefixes[str(ctx.guild.id)]}` or {self.ctx.user.mention}, you can also use slash commands\nFor more info use the /help command!'), False, 3, 20)
 
     @commands.command(hidden=True, name="modifycurrency")
     # change currency values of a target
@@ -188,3 +199,148 @@ class ManageCommands(commands.Cog, name="Management"):
             file.flush()
 
         print("Done!")
+
+    @commands.group(hidden=True, name="triggers", invoke_without_command=True)
+    @commands.has_permissions(administrator=True)
+    async def triggers(self, bot):
+        """Triggers that reply whenever someone mentions a trigger"""
+        await utils.senderror(bot, f"No command specified, do {self.bot.guild_prefixes[str(bot.guild.id)]}help triggers for more info")
+
+    @triggers.group(hidden=True, name="match", invoke_without_command=True)
+    @commands.has_permissions(administrator=True)
+    async def match(self, bot):
+        """Text triggers that have a match in one of the user's words"""
+        await utils.senderror(bot, f"No command specified, do {self.bot.guild_prefixes[str(bot.guild.id)]}help triggers match for more info")
+
+    @match.command(hidden=True, name="toggle")
+    @commands.has_permissions(administrator=True)
+    async def matchtoggletriggers(self, bot):
+        """Toggles match message triggers"""
+        await ManageUtils.toggletriggers(self, bot, "match")
+
+    @match.command(hidden=True, name="list")
+    @commands.has_permissions(administrator=True)
+    async def matchlisttriggers(self, bot):
+        """Lists match message triggers"""
+        await ManageUtils.listtriggers(self, bot, "match")
+
+    @match.command(hidden=True, name="add")
+    @commands.has_permissions(administrator=True)
+    async def matchaddtrigger(self, bot, trigger: str, *, reply: str):
+        f"""Adds a match message trigger (ex. {self.bot.guild_prefixes[str(bot.guild.id)]}triggers match add trigger|anothertrigger this is the reply)"""
+        await ManageUtils.addtrigger(self, bot, trigger, reply, "match")
+
+    @match.command(hidden=True, name="rem")
+    @commands.has_permissions(administrator=True)
+    async def matchremovetrigger(self, bot, *, trigger: str):
+        f"""Removes a match message trigger (ex. {self.bot.guild_prefixes[str(bot.guild.id)]}triggers match del this|trigger other|trigger)"""
+        await ManageUtils.removetrigger(self, bot, trigger, "match")
+
+    @triggers.group(hidden=True, name="regex", invoke_without_command=True)
+    @commands.has_permissions(administrator=True)
+    async def regex(self, bot):
+        """Text triggers that have a regex match in one of the user's words"""
+        await utils.senderror(bot, f"No command specified, do {self.bot.guild_prefixes[str(bot.guild.id)]}help triggers regex for more info")
+
+    @regex.command(hidden=True, name="toggle")
+    @commands.has_permissions(administrator=True)
+    async def regextoggletriggers(self, bot):
+        """Toggles regex message triggers"""
+        await ManageUtils.toggletriggers(self, bot, "regex")
+
+    @regex.command(hidden=True, name="list")
+    @commands.has_permissions(administrator=True)
+    async def regexlisttriggers(self, bot):
+        """Lists regex message triggers"""
+        await ManageUtils.listtriggers(self, bot, "regex")
+
+    @regex.command(hidden=True, name="add")
+    @commands.has_permissions(administrator=True)
+    async def regexaddtrigger(self, bot, trigger: str, *, reply: str):
+        f"""Adds a regex message trigger, underscores are replaced with a space (ex. {self.bot.guild_prefixes[str(bot.guild.id)]}triggers regex add this_trigger|another_trigger this is the reply)"""
+        await ManageUtils.addtrigger(self, bot, trigger, reply, "regex")
+
+    @regex.command(hidden=True, name="rem")
+    @commands.has_permissions(administrator=True)
+    async def regexremovetrigger(self, bot, *, trigger: str):
+        f"""Removes a regex message trigger, underscores are replaced with a space (ex. {self.bot.guild_prefixes[str(bot.guild.id)]}triggers regex del this|trigger another_trigger)"""
+        await ManageUtils.removetrigger(self, bot, trigger, "regex")
+
+
+class ManageUtils():
+    def __init__(self, bot):
+        self.bot = bot
+
+    async def define_triggers(self, bot):
+        triggers = self.bot.triggers
+        if str(bot.guild.id) not in triggers:
+            triggers[str(bot.guild.id)] = {}
+            triggers[str(bot.guild.id)]["regex"] = {}
+            triggers[str(bot.guild.id)]["regex"]["toggle"] = False
+            triggers[str(bot.guild.id)]["regex"]["triggers"] = {}
+            triggers[str(bot.guild.id)]["match"] = {}
+            triggers[str(bot.guild.id)]["match"]["toggle"] = False
+            triggers[str(bot.guild.id)]["match"]["triggers"] = {}
+        return triggers
+
+    async def toggletriggers(self, bot, type: str):
+        triggers = await ManageUtils.define_triggers(self, bot)
+        if triggers[str(bot.guild.id)][type]["toggle"]:
+            triggers[str(bot.guild.id)][type]["toggle"] = False
+            await utils.sendembed(bot, discord.Embed(description=f"❌ Disabled {type} triggers", color=0xFF6969), False)
+        else:
+            triggers[str(bot.guild.id)][type]["toggle"] = True
+            await utils.sendembed(bot, discord.Embed(description=f"✅ Enabled {type} triggers", color=0x66FF99), False)
+        configs.save(self.bot.triggers_path, "w", triggers)
+
+    async def listtriggers(self, bot, type: str):
+        triggers = await ManageUtils.define_triggers(self, bot)
+        if triggers[str(bot.guild.id)][type]["triggers"]:
+            e = discord.Embed(description=f"Triggers found:")
+            for trigger, reply in triggers[str(bot.guild.id)][type]["triggers"].items():
+                if type == "regex":
+                    trigger = trigger.replace(" ", "_")
+                e.add_field(name=trigger, value=reply)
+            await utils.sendembed(bot, e, show_all=False, delete=3, delete_speed=20)
+        else:
+            await utils.senderror(bot, "No triggers found")
+
+    async def addtrigger(self, bot, trigger: str, reply: str, type: str):
+        triggers = await ManageUtils.define_triggers(self, bot)
+        triggers_list = triggers[str(bot.guild.id)][type]["triggers"]
+        if type == "regex":
+            trigger = trigger.replace("_", " ")
+        e = discord.Embed(title=f"🛠️ Trying to add trigger:", color=0x66FF99)
+        old_reply = None
+        try:
+            old_reply = triggers_list[trigger]
+        except:
+            pass
+        triggers_list[trigger] = reply
+        if old_reply is not None:
+            e.add_field(
+                name=f"Overwrote: {', '.join(trigger.split('|'))}", value=f"**Old reply:** `{old_reply}`\n**New reply:** `{triggers_list[trigger]}`")
+        else:
+            e.add_field(
+                name=f"Trigger: {', '.join(trigger.split('|'))}", value=f"**Reply:** `{reply}`")
+        await utils.sendembed(bot, e, False)
+        configs.save(self.bot.triggers_path, "w", triggers)
+
+    async def removetrigger(self, bot, trigger: str, type: str):
+        triggers = await ManageUtils.define_triggers(self, bot)
+        triggers_list = triggers[str(bot.guild.id)][type]["triggers"]
+        trigger = trigger.split(" ")
+        e = discord.Embed(
+            title=f"🛠️ Trying to remove triggers:", color=0x66FF99)
+        for item in trigger:
+            try:
+                if type == "regex":
+                    item = item.replace("_", " ")
+                reply = triggers_list[str(item)]
+                triggers_list.pop(str(item))
+                e.add_field(
+                    name=f"✅ Removed {item.replace(' ', '_')}", value=f"`{reply}`")
+            except:
+                e.add_field(name="❌ Couldn't find", value=f"`{item}`")
+        await utils.sendembed(bot, e, False)
+        configs.save(self.bot.triggers_path, "w", triggers)

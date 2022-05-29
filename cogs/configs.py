@@ -11,19 +11,24 @@ class Configs(commands.Cog, name="Configs"):
     COG_EMOJI = "⚙️"
 
     def __init__(self, bot):
+        paths = {"./data/afk.json": "afk",
+                 "./data/global_perms.json": "global_perms",
+                 "./data/reputation.json": "reputation",
+                 "./data/perms.json": "perms",
+                 "./data/triggers.json": "triggers",
+                 "./data/save.json": "save",
+                 "./data/prefixes.json": "guild_prefixes"}
+        for path, name in paths.items():
+            with open(path, "r") as f:
+                setattr(bot, str(name), json.loads(f.read()))
+                setattr(bot, str(name) + "_path", path)
+
         bot.eulogy_emoji = "<:eulogy_zero:967096744800296970>"
         bot.lunar_coin_emoji = "<:lunar_coin:967122007089119242>"
         bot.lunar_symbol = "<:lunar_symbol:972089212264407070>"
         bot.last_dice_usage = 0
         bot.counter = 0
         bot.first_eulogycount = True
-        with open('./data/save.json', mode='r', encoding='utf-8') as file:
-            data = file.read()
-            data.replace('\n', '')
-            data.replace('\t', '')
-        bot.save = json.loads(data)
-        with open("./data/hugs.txt", mode='r', encoding='utf-8') as file:
-            bot.hugs = int(file.read())
         bot.jokes = ["Alien Head.",
                      "Ion Surge.",
                      "Suppressive Fire."]
@@ -42,6 +47,25 @@ class Configs(commands.Cog, name="Configs"):
                              "I agree.",
                              "Most definitely yes.",
                              "Fuck you."]
+        bot.rep_types = {"positive": "+ p plus ✅ 👍",
+                         "negative": "- m minus ❌ 👎",
+                         "informative": "ℹ️ ❓ stats s info i ?"}
+        bot.rep_type_positive = bot.rep_types["positive"].split(" ")
+        bot.rep_type_negative = bot.rep_types["negative"].split(" ")
+        bot.rep_type_informative = bot.rep_types["informative"].split(" ")
+        bot.rep_type_combined = bot.rep_type_positive + \
+            bot.rep_type_negative + bot.rep_type_informative
+        bot.rep_type_list = {"positive": "Positive Reputation",
+                             "negative": "Negative Reputation"}
+        bot.perms_list = {"blacklist": "Denies usage for bot",
+                          "weird": "Allows -hug -kiss",
+                          "ping": "Denies pinging user in -hug -kiss -pet",
+                          "pet": "Allows petting users/images/emojis",
+                          "joke": "Allows using -fall -promote"}
+        bot.global_perms_list_false = {"wb_alert_dm": "Disables/Enables welcome back embed sending in DM instead",
+                                       "afk_alert_dm": "Disables/Enables AFK alerts sending in DM instead"}
+        bot.global_perms_list_true = {"wb_alert": "Disables/Enables welcome back embed, overrides DM",
+                                      "afk_alert": "Disables/Enables AFK alerts, overrides DM", }
         bot.hug_gifs = ["https://media1.tenor.com/images/7e30687977c5db417e8424979c0dfa99/tenor.gif",
                         "https://media1.tenor.com/images/4d89d7f963b41a416ec8a55230dab31b/tenor.gif",
                         "https://media1.tenor.com/images/45b1dd9eaace572a65a305807cfaec9f/tenor.gif",
@@ -84,3 +108,8 @@ class Configs(commands.Cog, name="Configs"):
         bot.kiss_words_bot = ['kiss',
                               'smooch',
                               'embrace']
+
+
+def save(path, type, data):
+    with open(path, type) as f:
+        json.dump(data, f, indent=4, sort_keys=True)
