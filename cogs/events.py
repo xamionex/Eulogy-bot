@@ -20,10 +20,6 @@ class Events(commands.Cog, name="Events"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.autosave.start()
-
-    def cog_unload(self):
-        self.autosave.cancel()
 
     @commands.Cog.listener("on_ready")
     async def logged_in(self):
@@ -237,17 +233,3 @@ class Events(commands.Cog, name="Events"):
                         reply = random.choice(list(reply.split('|')))
                         await message.reply(reply)
                         break
-
-    @tasks.loop(minutes=1)
-    async def autosave(self):
-        print("Saving to disk...", end=' ')
-
-        with open("./data/save.json", mode="w", encoding="utf-8") as savefile:
-            savefile.write(json.dumps(self.bot.save, sort_keys=True, indent=4))
-            savefile.flush()
-
-        with open("./data/hugs.txt", mode="w", encoding="utf-8") as file:
-            file.write(str(self.bot.hugs))
-            file.flush()
-
-        print("Done!")
